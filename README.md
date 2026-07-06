@@ -35,3 +35,9 @@ Open `index.html` in a browser.
 This directory is ready for GitHub Pages. Upload the full folder contents to a GitHub repository and enable Pages from the repository settings.
 
 No backend, API key, or account is required for the tool itself.
+
+After GitHub login is available on this machine, run:
+
+```powershell
+D:\GPT\资料库\海外美元接活\brief-forge\scripts\publish-github-pages.ps1
+```
