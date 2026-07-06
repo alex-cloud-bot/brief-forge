@@ -1,0 +1,824 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>BriefForge</title>
+  <meta name="description" content="Turn messy AI, software, SaaS, or automation notes into a structured project brief.">
+  <style>
+    :root {
+      --ink: #17211d;
+      --muted: #637069;
+      --paper: #f7f8f5;
+      --panel: #ffffff;
+      --line: #d9ded7;
+      --line-strong: #b9c1ba;
+      --teal: #0e7c78;
+      --teal-dark: #095c59;
+      --amber: #b87518;
+      --red: #a83d30;
+      --dark: #101713;
+      --soft: #e7f2ef;
+      --shadow: 0 18px 44px rgba(23, 33, 29, 0.11);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--paper);
+      font-family: Arial, Helvetica, sans-serif;
+      line-height: 1.5;
+    }
+
+    button,
+    input,
+    textarea,
+    select {
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    .shell {
+      min-height: 100vh;
+      display: grid;
+      grid-template-rows: auto 1fr;
+    }
+
+    .topbar {
+      min-height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      padding: 0 28px;
+      color: #fff;
+      background: var(--dark);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+      font-weight: 800;
+      font-size: 20px;
+    }
+
+    .mark {
+      width: 32px;
+      height: 32px;
+      display: grid;
+      place-items: center;
+      border-radius: 8px;
+      background: var(--teal);
+      color: #fff;
+      font-weight: 900;
+    }
+
+    .top-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .status-pill {
+      min-height: 34px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 0 11px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: 8px;
+      color: rgba(255, 255, 255, 0.86);
+      font-size: 13px;
+      background: rgba(255, 255, 255, 0.06);
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--amber);
+    }
+
+    .workspace {
+      display: grid;
+      grid-template-columns: minmax(390px, 0.9fr) minmax(0, 1.1fr);
+      min-height: calc(100vh - 64px);
+    }
+
+    .left {
+      display: grid;
+      grid-template-rows: auto 1fr;
+      border-right: 1px solid var(--line);
+      background: var(--panel);
+    }
+
+    .intro {
+      min-height: 210px;
+      padding: 28px;
+      color: #fff;
+      background-image:
+        linear-gradient(90deg, rgba(16, 23, 19, 0.96), rgba(16, 23, 19, 0.72)),
+        url("assets/hero-workflow.png");
+      background-size: cover;
+      background-position: center;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 42px;
+      line-height: 1.04;
+      letter-spacing: 0;
+    }
+
+    .intro p {
+      max-width: 540px;
+      margin: 14px 0 0;
+      color: rgba(255, 255, 255, 0.84);
+      font-size: 16px;
+    }
+
+    .form-area {
+      height: calc(100vh - 274px);
+      min-height: 520px;
+      overflow: auto;
+      padding: 24px 28px 30px;
+    }
+
+    .field-grid {
+      display: grid;
+      gap: 16px;
+    }
+
+    label,
+    .field-label {
+      display: grid;
+      gap: 7px;
+      font-size: 14px;
+      font-weight: 800;
+    }
+
+    .hint {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 400;
+    }
+
+    input,
+    textarea,
+    select {
+      width: 100%;
+      min-height: 44px;
+      padding: 11px 12px;
+      border: 1px solid var(--line-strong);
+      border-radius: 7px;
+      color: var(--ink);
+      background: #fff;
+      outline: none;
+    }
+
+    input:focus,
+    textarea:focus,
+    select:focus {
+      border-color: var(--teal);
+      box-shadow: 0 0 0 3px rgba(14, 124, 120, 0.16);
+    }
+
+    textarea {
+      min-height: 108px;
+      resize: vertical;
+    }
+
+    .compact-row {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .chip {
+      min-height: 34px;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 0 10px;
+      border: 1px solid var(--line-strong);
+      border-radius: 7px;
+      background: #fff;
+      color: var(--ink);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .chip input {
+      width: 16px;
+      min-height: 16px;
+      padding: 0;
+      accent-color: var(--teal);
+    }
+
+    .right {
+      display: grid;
+      grid-template-rows: auto 1fr;
+      min-width: 0;
+    }
+
+    .toolbar {
+      min-height: 72px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 14px 24px;
+      background: #fff;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .toolbar-title {
+      min-width: 0;
+    }
+
+    .toolbar-title strong {
+      display: block;
+      font-size: 18px;
+    }
+
+    .toolbar-title span {
+      display: block;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .button-row {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      min-height: 40px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 0 13px;
+      border: 1px solid var(--line-strong);
+      border-radius: 7px;
+      color: var(--ink);
+      background: #fff;
+      font-weight: 800;
+      text-decoration: none;
+    }
+
+    .btn.primary {
+      color: #fff;
+      border-color: var(--teal);
+      background: var(--teal);
+    }
+
+    .btn.primary:hover {
+      background: var(--teal-dark);
+    }
+
+    .btn.warn {
+      color: var(--red);
+    }
+
+    .output-wrap {
+      min-height: 0;
+      padding: 24px;
+      overflow: auto;
+    }
+
+    .output-panel {
+      min-height: calc(100vh - 160px);
+      display: grid;
+      grid-template-rows: auto 1fr;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      overflow: hidden;
+      background: #fff;
+      box-shadow: var(--shadow);
+    }
+
+    .readiness {
+      display: grid;
+      gap: 10px;
+      padding: 16px;
+      border-bottom: 1px solid var(--line);
+      background: #fbfcfa;
+    }
+
+    .meter {
+      height: 10px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: #e0e5df;
+    }
+
+    .meter span {
+      display: block;
+      width: 0;
+      height: 100%;
+      background: var(--teal);
+      transition: width 160ms ease;
+    }
+
+    .readiness-line {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .brief-output {
+      width: 100%;
+      min-height: 640px;
+      height: 100%;
+      padding: 18px;
+      border: 0;
+      border-radius: 0;
+      resize: none;
+      font-family: Consolas, "Courier New", monospace;
+      font-size: 14px;
+      line-height: 1.58;
+      color: #15201b;
+      background: #fff;
+      box-shadow: none;
+    }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 22px;
+      transform: translateX(-50%) translateY(20px);
+      padding: 11px 14px;
+      border-radius: 8px;
+      color: #fff;
+      background: rgba(16, 23, 19, 0.92);
+      box-shadow: var(--shadow);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 160ms ease, transform 160ms ease;
+      font-size: 14px;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    @media (max-width: 980px) {
+      .topbar {
+        align-items: flex-start;
+        flex-direction: column;
+        padding: 16px 18px;
+      }
+
+      .workspace {
+        grid-template-columns: 1fr;
+      }
+
+      .left {
+        border-right: 0;
+      }
+
+      .form-area {
+        height: auto;
+        min-height: 0;
+      }
+
+      .toolbar {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .output-panel {
+        min-height: 640px;
+      }
+    }
+
+    @media (max-width: 560px) {
+      h1 {
+        font-size: 34px;
+      }
+
+      .intro,
+      .form-area,
+      .toolbar,
+      .output-wrap {
+        padding-left: 18px;
+        padding-right: 18px;
+      }
+
+      .compact-row {
+        grid-template-columns: 1fr;
+      }
+
+      .btn {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header class="topbar">
+      <div class="brand">
+        <div class="mark">B</div>
+        <span>BriefForge</span>
+      </div>
+      <div class="top-actions">
+        <div class="status-pill"><span class="dot"></span><span id="autosave-status">Draft saved locally</span></div>
+      </div>
+    </header>
+
+    <main class="workspace">
+      <section class="left">
+        <div class="intro">
+          <h1>Client Brief Builder</h1>
+          <p>Clean project scope for AI, software, SaaS, and automation ideas before anyone starts building.</p>
+        </div>
+
+        <div class="form-area">
+          <div class="field-grid">
+            <label>
+              Project name
+              <input id="projectName" placeholder="Example: AI support workflow for a small agency">
+            </label>
+
+            <div class="compact-row">
+              <label>
+                Client type
+                <select id="clientType">
+                  <option>Founder</option>
+                  <option>Freelancer</option>
+                  <option>Small team</option>
+                  <option>Agency</option>
+                  <option>Consultant</option>
+                  <option>Internal team</option>
+                </select>
+              </label>
+              <label>
+                Project stage
+                <select id="stage">
+                  <option>Rough idea</option>
+                  <option>Existing notes</option>
+                  <option>Client request</option>
+                  <option>Before hiring</option>
+                  <option>Before building</option>
+                  <option>Needs rescue</option>
+                </select>
+              </label>
+            </div>
+
+            <label>
+              Goal
+              <textarea id="goal" placeholder="What should this project achieve?"></textarea>
+            </label>
+
+            <label>
+              Current blocker
+              <textarea id="blocker" placeholder="What is unclear, risky, missing, or stuck?"></textarea>
+            </label>
+
+            <label>
+              Existing materials
+              <textarea id="materials" placeholder="Paste notes, screenshots summary, links, customer messages, feature ideas, or workflow details."></textarea>
+            </label>
+
+            <label>
+              Desired outcome
+              <textarea id="outcome" placeholder="What should the final output be useful for?"></textarea>
+            </label>
+
+            <div class="field-label">
+              Deliverable format
+              <div class="chips">
+                <label class="chip"><input type="checkbox" value="written project brief" checked> Brief</label>
+                <label class="chip"><input type="checkbox" value="workflow map"> Workflow</label>
+                <label class="chip"><input type="checkbox" value="prompt pack"> Prompts</label>
+                <label class="chip"><input type="checkbox" value="spreadsheet or table"> Table</label>
+                <label class="chip"><input type="checkbox" value="small software tool scope"> Tool scope</label>
+              </div>
+            </div>
+
+            <div class="compact-row">
+              <label>
+                Deadline
+                <input id="deadline" placeholder="Example: within 7 days">
+              </label>
+              <label>
+                Budget range
+                <select id="budget">
+                  <option>Not sure yet</option>
+                  <option>Under $100</option>
+                  <option>$100-$300</option>
+                  <option>$300-$1,000</option>
+                  <option>$1,000+</option>
+                </select>
+              </label>
+            </div>
+
+            <label>
+              Constraints
+              <textarea id="constraints" placeholder="Tools, languages, platform limits, privacy concerns, budget limits, or non-negotiable requirements."></textarea>
+            </label>
+          </div>
+        </div>
+      </section>
+
+      <section class="right">
+        <div class="toolbar">
+          <div class="toolbar-title">
+            <strong>Generated Markdown Brief</strong>
+            <span id="quality-line">Add project details to improve the draft.</span>
+          </div>
+          <div class="button-row">
+            <button class="btn primary" id="generate" type="button">Generate</button>
+            <button class="btn" id="copy" type="button">Copy</button>
+            <button class="btn" id="download" type="button">Download .md</button>
+            <button class="btn warn" id="clear" type="button">Clear</button>
+          </div>
+        </div>
+
+        <div class="output-wrap">
+          <div class="output-panel">
+            <div class="readiness">
+              <div class="readiness-line">
+                <span>Brief readiness</span>
+                <strong id="score">0%</strong>
+              </div>
+              <div class="meter"><span id="meter"></span></div>
+            </div>
+            <textarea id="briefOutput" class="brief-output" spellcheck="false"></textarea>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const storeKey = "briefforge:v1";
+    const fields = [
+      "projectName",
+      "clientType",
+      "stage",
+      "goal",
+      "blocker",
+      "materials",
+      "outcome",
+      "deadline",
+      "budget",
+      "constraints"
+    ];
+
+    const el = Object.fromEntries(fields.map((id) => [id, document.getElementById(id)]));
+    el.output = document.getElementById("briefOutput");
+    el.score = document.getElementById("score");
+    el.meter = document.getElementById("meter");
+    el.quality = document.getElementById("quality-line");
+    el.toast = document.getElementById("toast");
+    el.autosave = document.getElementById("autosave-status");
+
+    function value(id) {
+      return (el[id].value || "").trim();
+    }
+
+    function fallback(text, fallbackText = "Not provided yet.") {
+      return text.trim() || fallbackText;
+    }
+
+    function selectedDeliverables() {
+      return Array.from(document.querySelectorAll(".chip input:checked")).map((item) => item.value);
+    }
+
+    function sentence(text) {
+      const clean = fallback(text);
+      return clean.endsWith(".") || clean.endsWith("?") || clean.endsWith("!") ? clean : clean + ".";
+    }
+
+    function listFromText(text) {
+      const clean = text.trim();
+      if (!clean) return ["No concrete materials were provided yet."];
+      const lines = clean
+        .split(/\n|;|\u2022|-/)
+        .map((line) => line.trim())
+        .filter(Boolean)
+        .slice(0, 8);
+      return lines.length ? lines : [clean];
+    }
+
+    function scoreBrief() {
+      const checks = [
+        value("projectName"),
+        value("goal"),
+        value("blocker"),
+        value("materials"),
+        value("outcome"),
+        value("deadline"),
+        value("constraints"),
+        selectedDeliverables().length ? "x" : ""
+      ];
+      const filled = checks.filter((item) => item.length >= 4).length;
+      const score = Math.round((filled / checks.length) * 100);
+      el.score.textContent = `${score}%`;
+      el.meter.style.width = `${score}%`;
+      el.quality.textContent =
+        score >= 80 ? "This draft has enough material for a paid cleanup." :
+        score >= 50 ? "This draft is usable, but more materials would improve it." :
+        "Add project details to improve the draft.";
+      return score;
+    }
+
+    function missingQuestions() {
+      const questions = [];
+      if (!value("goal")) questions.push("What is the main outcome this project should create?");
+      if (!value("materials")) questions.push("What notes, examples, screenshots, files, or client messages are available?");
+      if (!value("outcome")) questions.push("What should the final deliverable help someone do?");
+      if (!value("deadline")) questions.push("When does the first useful version need to be ready?");
+      if (!value("constraints")) questions.push("What tools, privacy limits, budget limits, or technical constraints must be respected?");
+      if (!questions.length) {
+        questions.push("Which part of the scope would create the most value if completed first?");
+        questions.push("Who will use the first version and how will they judge whether it works?");
+        questions.push("What should be explicitly excluded from version one?");
+      }
+      return questions;
+    }
+
+    function buildBrief() {
+      const deliverables = selectedDeliverables();
+      const project = fallback(value("projectName"), "Untitled AI / software project");
+      const goal = fallback(value("goal"));
+      const blocker = fallback(value("blocker"));
+      const materials = listFromText(value("materials"));
+      const outcome = fallback(value("outcome"));
+      const constraints = fallback(value("constraints"));
+      const deliverableLine = deliverables.length ? deliverables.join(", ") : "written project brief";
+      const score = scoreBrief();
+
+      return [
+        `# ${project}`,
+        "",
+        "## 1. Project Summary",
+        `${el.clientType.value} project at the "${el.stage.value}" stage. The goal is: ${sentence(goal)}`,
+        "",
+        `Recommended deliverable format: ${deliverableLine}.`,
+        `Deadline: ${fallback(value("deadline"))}`,
+        `Budget range: ${el.budget.value}`,
+        `Brief readiness score: ${score}%`,
+        "",
+        "## 2. Real Problem",
+        sentence(blocker),
+        "",
+        "The immediate planning problem is to reduce ambiguity before building, hiring, or quoting the work.",
+        "",
+        "## 3. Existing Materials",
+        ...materials.map((item) => `- ${item}`),
+        "",
+        "## 4. Desired Outcome",
+        sentence(outcome),
+        "",
+        "## 5. Smallest Useful Version",
+        "Start with a written scope that proves the workflow, input materials, expected output, and acceptance criteria are clear. Avoid building integrations, dashboards, or automation until the first useful version is defined.",
+        "",
+        "## 6. Recommended Deliverable",
+        `Create a ${deliverableLine} that includes the user goal, input materials, workflow steps, output format, missing questions, risks, and non-goals.`,
+        "",
+        "## 7. Workflow Milestones",
+        "- Collect all existing notes, examples, screenshots, files, and current workflow details.",
+        "- Convert the rough idea into a clear problem statement.",
+        "- Define the smallest useful version.",
+        "- List missing information and risky assumptions.",
+        "- Produce a written handoff brief that can be used for quoting, building, or hiring.",
+        "",
+        "## 8. Constraints",
+        sentence(constraints),
+        "",
+        "## 9. Risks and Non-goals",
+        "- Do not promise revenue, ranking, funding, follower growth, or sales results.",
+        "- Do not start full software development before the core workflow is clear.",
+        "- Do not include regulated legal, medical, financial, or investment advice.",
+        "- Do not include spam, fraud, academic cheating, gambling, or illegal activity.",
+        "",
+        "## 10. Clarifying Questions",
+        ...missingQuestions().map((item) => `- ${item}`),
+        "",
+        "## 11. Next Step",
+        "Send this draft with the available materials for a paid AI Brief Cleanup review. The review should tighten the scope, identify missing information, and turn this into a stronger handoff brief.",
+        ""
+      ].join("\n");
+    }
+
+    function saveDraft() {
+      const data = {};
+      fields.forEach((id) => data[id] = el[id].value);
+      data.deliverables = selectedDeliverables();
+      data.output = el.output.value;
+      localStorage.setItem(storeKey, JSON.stringify(data));
+      el.autosave.textContent = "Draft saved locally";
+      scoreBrief();
+    }
+
+    function loadDraft() {
+      try {
+        const data = JSON.parse(localStorage.getItem(storeKey) || "{}");
+        fields.forEach((id) => {
+          if (data[id] !== undefined) el[id].value = data[id];
+        });
+        if (Array.isArray(data.deliverables)) {
+          document.querySelectorAll(".chip input").forEach((item) => {
+            item.checked = data.deliverables.includes(item.value);
+          });
+        }
+        el.output.value = data.output || buildBrief();
+      } catch (error) {
+        el.output.value = buildBrief();
+      }
+      scoreBrief();
+    }
+
+    function showToast(message) {
+      el.toast.textContent = message;
+      el.toast.classList.add("show");
+      setTimeout(() => el.toast.classList.remove("show"), 1800);
+    }
+
+    document.getElementById("generate").addEventListener("click", () => {
+      el.output.value = buildBrief();
+      saveDraft();
+      showToast("Brief generated");
+    });
+
+    document.getElementById("copy").addEventListener("click", async () => {
+      if (!el.output.value.trim()) el.output.value = buildBrief();
+      try {
+        await navigator.clipboard.writeText(el.output.value);
+        showToast("Copied");
+      } catch (error) {
+        el.output.focus();
+        el.output.select();
+        showToast("Selected for manual copy");
+      }
+    });
+
+    document.getElementById("download").addEventListener("click", () => {
+      if (!el.output.value.trim()) el.output.value = buildBrief();
+      const slug = (value("projectName") || "brief")
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-|-$/g, "")
+        .slice(0, 48) || "brief";
+      const blob = new Blob([el.output.value], { type: "text/markdown;charset=utf-8" });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = `${slug}-brief.md`;
+      link.click();
+      URL.revokeObjectURL(link.href);
+      showToast("Markdown downloaded");
+    });
+
+    document.getElementById("clear").addEventListener("click", () => {
+      fields.forEach((id) => {
+        if (id === "clientType") el[id].value = "Founder";
+        else if (id === "stage") el[id].value = "Rough idea";
+        else if (id === "budget") el[id].value = "Not sure yet";
+        else el[id].value = "";
+      });
+      document.querySelectorAll(".chip input").forEach((item, index) => item.checked = index === 0);
+      el.output.value = buildBrief();
+      localStorage.removeItem(storeKey);
+      saveDraft();
+      showToast("Cleared");
+    });
+
+    fields.forEach((id) => el[id].addEventListener("input", saveDraft));
+    document.querySelectorAll(".chip input").forEach((item) => item.addEventListener("change", saveDraft));
+
+    loadDraft();
+  </script>
+</body>
+</html>
