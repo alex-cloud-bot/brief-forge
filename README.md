@@ -36,6 +36,10 @@ This directory is ready for GitHub Pages. Upload the full folder contents to a G
 
 No backend, API key, or account is required for the tool itself.
 
+Public URL:
+
+https://alex-cloud-bot.github.io/brief-forge/
+
 After GitHub login is available on this machine, run:
 
 ```powershell
