@@ -25,7 +25,7 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 $repoExists = $false
-& $Gh repo view $RepoName *> $null
+$repoViewOutput = & $Gh repo view $RepoName 2>$null
 if ($LASTEXITCODE -eq 0) {
   $repoExists = $true
 }
